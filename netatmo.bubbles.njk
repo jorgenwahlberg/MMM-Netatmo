@@ -12,8 +12,7 @@
               <tr>
                 <td class="primary">
                   <div class="{{ module.primary.class }}">
-                    <div class="light bright {{ fontClassPrimary }}">{{ module.primary.value | safe }}</div>
-                    <div class="xsmall">{{ module.primary.unit }}</div>
+                    <div class="light bright {{ fontClassPrimary }}">{{ module.primary.value | safe }}{{ module.primary.unit }}</div>
                   </div>
                 </td>
                 <td class="secondary">
@@ -31,8 +30,7 @@
                       {% if showMeasurementIcon and not measurement.icon == '' %}
                         <i class="fas fa-fw {{ measurement.icon }}"></i>
                       {% endif %}
-                      <span class="value">{{ measurement.value|safe }}</span>
-                      <span class="unit">{{ measurement.unit }}</span>
+                      <span class="value">{{ measurement.value|safe }}{{ measurement.unit }}</span>
                     </div>
                   {% endfor %}
                   {# <div class="small flash">letzter Kontakt: vor 37 Minuten</div> #}

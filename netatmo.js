@@ -51,6 +51,8 @@ Module.register('netatmo', {
     CO2: 'CO2',
     HUMIDITY: 'Humidity',
     TEMPERATURE: 'Temperature',
+    MIN_TEMP: 'min_temp',
+    MAX_TEMP: 'max_temp',
     TEMPERATURE_TREND: 'temp_trend',
     PRESSURE: 'Pressure',
     PRESSURE_TREND: 'pressure_trend',
@@ -178,8 +180,12 @@ Module.register('netatmo', {
         } else {
           result.measurementList.push(this.getMeasurement(module, this.measurement.TEMPERATURE))
         }
-        if (this.config.showTrend) { result.measurementList.push(this.getMeasurement(module, this.measurement.TEMPERATURE_TREND)) }
+        if (this.config.showTrend) { 
+          result.measurementList.push(this.getMeasurement(module, this.measurement.TEMPERATURE_TREND)) 
+        }
         result.measurementList.push(this.getMeasurement(module, this.measurement.HUMIDITY))
+        result.measurementList.push(this.getMeasurement(module, this.measurement.MIN_TEMP))
+        result.measurementList.push(this.getMeasurement(module, this.measurement.MAX_TEMP))
         break
       case this.moduleType.WIND:
         if (this.config.design === 'bubbles') {
@@ -279,6 +285,10 @@ Module.register('netatmo', {
         return value.toFixed(0)// + '&nbsp;mbar'
       case this.measurement.TEMPERATURE:
         return value.toFixed(1)// + '°C'
+      case this.measurement.MIN_TEMP:
+        return value.toFixed(1)// + '°C'
+      case this.measurement.MAX_TEMP:
+        return value.toFixed(1)// + '°C'
       case this.measurement.RAIN:
       case this.measurement.RAIN_PER_HOUR:
       case this.measurement.RAIN_PER_DAY:
@@ -310,7 +320,11 @@ Module.register('netatmo', {
       case this.measurement.PRESSURE:
         return 'mbar'
       case this.measurement.TEMPERATURE:
-        return '°C'
+        return '°'
+      case this.measurement.MIN_TEMP:
+        return '°'
+      case this.measurement.MAX_TEMP:
+        return '°'
       case this.measurement.RAIN:
       case this.measurement.RAIN_PER_HOUR:
       case this.measurement.RAIN_PER_DAY:

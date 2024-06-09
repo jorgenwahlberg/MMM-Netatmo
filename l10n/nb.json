@@ -5,6 +5,8 @@
   "PRESSURE": "Lufttrykk",
   "PRESSURE_TREND": "Lufttrykk (trend)",
   "TEMPERATURE": "Temperatur",
+  "MIN_TEMP": "Min temperatur",
+  "MAX_TEMP": "Maks temperatur",
   "TEMP_TREND": "Temperatur (trend)",
   "RAIN": "Regn",
   "SUM_RAIN_1": "Regn (1h)",
