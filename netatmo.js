@@ -32,6 +32,9 @@ Module.register('netatmo', {
     fontClassMeasurement: 'xsmall',
     thresholdCO2Average: 800,
     thresholdCO2Bad: 1800,
+    unitOfMeasurement: '',
+    unitOfMeasurementPressure: '',
+    unitOfMeasurementWind: '',
     mockData: false,
   },
   notifications: {
@@ -66,24 +69,37 @@ Module.register('netatmo', {
     RAIN_PER_DAY: 'sum_rain_24',
   },
   // init method
-  start: function () {
-    const self = this
+  start () {
     Log.info(`Starting module: ${this.name}`)
-    self.loaded = false
-    self.moduleList = []
+    this.loaded = false
+    this.moduleList = []
 
-    // get a new token at start-up. When receive, GET_CAMERA_EVENTS will be requested
-    setTimeout(function () {
-      self.sendSocketNotification(self.notifications.DATA, self.config)
+    // get a new token at start-up.
+    setTimeout(() => {
+      // best way is using initialize at start and if auth OK --> fetch data
+      this.sendSocketNotification('INIT', this.config)
     }, this.config.initialDelay * 1000)
 
     // set auto-update
-    setInterval(function () {
-      // request directly the data, with the previous token. When the token will become invalid (error 403), it will be requested again
-      self.sendSocketNotification(self.notifications.DATA, self.config)
+    setInterval(() => {
+      this.sendSocketNotification(this.notifications.DATA)
     }, this.config.updateInterval * 60 * 1000 + this.config.initialDelay * 1000)
   },
-  updateModuleList: function (stationList) {
+  updateUnitOfMeasurements (userPreferences) {
+    if (this.config.unitOfMeasurement === '') {
+      this.config.unitOfMeasurement = this.convertNetatmoUnit(userPreferences.unit)
+      console.log('Using user-preferred unit of measurement for temp/rain values %o', this.config.unitOfMeasurement)
+    }
+    if (this.config.unitOfMeasurementPressure === '') {
+      this.config.unitOfMeasurementPressure = this.convertNetatmoPressureUnit(userPreferences.pressureunit)
+      console.log('Using user-preferred unit of measurement for pressure values %o', this.config.unitOfMeasurementPressure)
+    }
+    if (this.config.unitOfMeasurementWind === '') {
+      this.config.unitOfMeasurementWind = this.convertNetatmoWindUnit(userPreferences.windunit)
+      console.log('Using user-preferred unit of measurement for wind values %o', this.config.unitOfMeasurementWind)
+    }
+  },
+  updateModuleList (stationList) {
     let moduleList = []
 
     for (const station of stationList) {
@@ -113,7 +129,7 @@ Module.register('netatmo', {
     }
     this.moduleList = moduleList
   },
-  getModule: function (module, stationName) {
+  getModule (module, stationName) {
     const result = {}
 
     result.name = module.module_name
@@ -134,7 +150,7 @@ Module.register('netatmo', {
         name: measurement,
         value: this.getValue(measurement, 0),
         unit: this.getUnit(measurement),
-        icon: this.getIcon(measurement, 0) + ' flash red',
+        icon: `${this.getIcon(measurement, 0)} flash red`,
         label: this.translate(measurement.toUpperCase()),
       })
 
@@ -251,11 +267,12 @@ Module.register('netatmo', {
     }
     return result
   },
-  getMeasurement: function (module, measurement, value) {
+  getMeasurement (module, measurement, value) {
     value = value || module.dashboard_data[measurement]
     if (measurement === this.measurement.TEMPERATURE_TREND || measurement === this.measurement.PRESSURE_TREND) {
       value = value || 'undefined'
     }
+
     return {
       name: measurement,
       value: this.getValue(measurement, value),
@@ -264,12 +281,12 @@ Module.register('netatmo', {
       label: this.translate(measurement.toUpperCase()),
     }
   },
-  kebabCase: function (name) {
+  kebabCase (name) {
     return name.replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase()
   },
-  getValue: function (measurement, value) {
+  getValue (measurement, value) {
     if (!value) { return value }
     switch (measurement) {
       case this.measurement.CO2:
@@ -282,23 +299,23 @@ Module.register('netatmo', {
       case 'radio':
         return value.toFixed(0)// + '%'
       case this.measurement.PRESSURE:
-        return value.toFixed(0)// + '&nbsp;mbar'
+        return this.convertPressureValue(value, this.config.unitOfMeasurementPressure)
       case this.measurement.TEMPERATURE:
-        return value.toFixed(1)// + '°C'
+        return this.convertTemperatureValue(value, this.config.unitOfMeasurement)
       case this.measurement.MIN_TEMP:
-        return value.toFixed(1)// + '°C'
+        return this.convertTemperatureValue(value, this.config.unitOfMeasurement)
       case this.measurement.MAX_TEMP:
-        return value.toFixed(1)// + '°C'
+        return this.convertTemperatureValue(value, this.config.unitOfMeasurement)
       case this.measurement.RAIN:
       case this.measurement.RAIN_PER_HOUR:
       case this.measurement.RAIN_PER_DAY:
-        return value.toFixed(1)// + '&nbsp;mm/h'
+        return this.convertRainValue(value, this.config.unitOfMeasurement)
       case this.measurement.WIND_STRENGTH:
       case this.measurement.GUST_STRENGTH:
-        return value.toFixed(0)// + '&nbsp;m/s'
+        return this.convertWindValue(value, this.config.unitOfMeasurementWind)
       case this.measurement.WIND_ANGLE:
       case this.measurement.GUST_ANGLE:
-        return this.getDirection(value) + '&nbsp;|&nbsp;' + value// + '°'
+        return `${this.getDirection(value)}&nbsp;|&nbsp;${value}`// + '°'
       case this.measurement.TEMPERATURE_TREND:
       case this.measurement.PRESSURE_TREND:
         return this.translate(value.toUpperCase())
@@ -306,7 +323,101 @@ Module.register('netatmo', {
         return value
     }
   },
-  getUnit: function (measurement) {
+  convertTemperatureValue (value, unit) {
+    switch (unit) {
+      case 'IMPERIAL':
+        return (value * 1.8 + 32).toFixed(1)
+      case 'METRIC':
+      default:
+        return value.toFixed(1)
+    }
+  },
+  convertRainValue (value, unit) {
+    switch (unit) {
+      case 'IMPERIAL':
+        return (value / 25.4).toFixed(1)
+      case 'METRIC':
+      default:
+        return value.toFixed(1)
+    }
+  },
+  convertPressureValue (value, unit) {
+    switch (unit) {
+      case 'MMHG':
+        return (value / 1.333).toFixed(1)
+      case 'INHG':
+        return (value / 33.864).toFixed(1)
+      case 'MBAR':
+      default:
+        return value.toFixed(0)
+    }
+  },
+  convertWindValue (value, unit) {
+    switch (unit) {
+      case 'MPH':
+        return (value / 1.609).toFixed(1)
+      case 'MS':
+        return (value / 3.6).toFixed(1)
+      case 'BFT':
+        return this.convertToBeaufort(value)
+      case 'KT':
+        return (value / 1.852).toFixed(1)
+      case 'KPH':
+      default:
+        return value.toFixed(1)
+    }
+  },
+  convertToBeaufort (value) {
+    if (value < 1) return 0
+    if (value <= 5) return 1
+    if (value <= 11) return 2
+    if (value <= 19) return 3
+    if (value <= 28) return 4
+    if (value <= 38) return 5
+    if (value <= 49) return 6
+    if (value <= 61) return 7
+    if (value <= 74) return 8
+    if (value <= 88) return 9
+    if (value <= 102) return 10
+    if (value <= 117) return 11
+    return 12
+  },
+  convertNetatmoUnit (unit) {
+    switch (unit) {
+      case 1:
+        return 'IMPERIAL'
+      case 0:
+      default:
+        return 'METRIC'
+    }
+  },
+  convertNetatmoPressureUnit (unit) {
+    switch (unit) {
+      case 2:
+        return 'MMHG'
+      case 1:
+        return 'INHG'
+      case 0:
+      default:
+        return 'MBAR'
+    }
+  },
+  convertNetatmoWindUnit (unit) {
+    switch (unit) {
+      case 4:
+        return 'KT'
+      case 3:
+        return 'BFT'
+      case 2:
+        return 'MS'
+      case 1:
+        return 'MPH'
+      case 0:
+      default:
+        return 'KPH'
+    }
+  },
+  getUnit (measurement) {
     switch (measurement) {
       case this.measurement.CO2:
         return 'ppm'
@@ -318,20 +429,20 @@ Module.register('netatmo', {
       case 'radio':
         return '%'
       case this.measurement.PRESSURE:
-        return 'mbar'
+        return this.getPressureUnitLabel(this.config.unitOfMeasurementPressure)
       case this.measurement.TEMPERATURE:
-        return '°'
+        return this.getTemperatureUnitLabel(this.config.unitOfMeasurement)
       case this.measurement.MIN_TEMP:
-        return '°'
+        return this.getTemperatureUnitLabel(this.config.unitOfMeasurement)
       case this.measurement.MAX_TEMP:
-        return '°'
+        return this.getTemperatureUnitLabel(this.config.unitOfMeasurement)
       case this.measurement.RAIN:
       case this.measurement.RAIN_PER_HOUR:
       case this.measurement.RAIN_PER_DAY:
-        return 'mm/h'
+        return this.getRainUnitLabel(this.config.unitOfMeasurement)
       case this.measurement.WIND_STRENGTH:
       case this.measurement.GUST_STRENGTH:
-        return 'm/s'
+        return this.getWindUnitLabel(this.config.unitOfMeasurementWind)
       case this.measurement.WIND_ANGLE:
       case this.measurement.GUST_ANGLE:
         return '°'
@@ -339,7 +450,51 @@ Module.register('netatmo', {
         return ''
     }
   },
-  getDirection: function (value) {
+  getTemperatureUnitLabel (unit) {
+    switch (unit) {
+      case 'IMPERIAL':
+        return '°F'
+      case 'METRIC':
+      default:
+        return '°C'
+    }
+  },
+  getRainUnitLabel (unit) {
+    switch (unit) {
+      case 'IMPERIAL':
+        return 'in/h'
+      case 'METRIC':
+      default:
+        return 'mm/h'
+    }
+  },
+  getPressureUnitLabel (unit) {
+    switch (unit) {
+      case 'MMHG':
+        return 'mmHg'
+      case 'INHG':
+        return 'inHg'
+      case 'MBAR':
+      default:
+        return 'mbar'
+    }
+  },
+  getWindUnitLabel (unit) {
+    switch (unit) {
+      case 'MPH':
+        return 'mph'
+      case 'MS':
+        return 'm/s'
+      case 'BFT':
+        return 'Bft'
+      case 'KT':
+        return 'kt'
+      case 'KPH':
+      default:
+        return 'km/h'
+    }
+  },
+  getDirection (value) {
     if (value < 11.25) return 'N'
     if (value < 33.75) return 'NNE'
     if (value < 56.25) return 'NE'
@@ -358,13 +513,13 @@ Module.register('netatmo', {
     if (value < 348.75) return 'NNW'
     return 'N'
   },
-  getCO2Status: function (value) {
+  getCO2Status (value) {
     if (!value || value === 'undefined' || value < 0) return 'undefined'
     if (value >= this.config.thresholdCO2Bad) return 'bad'
     if (value >= this.config.thresholdCO2Average) return 'average'
     return 'good'
   },
-  getIcon: function (dataType, value) {
+  getIcon (dataType, value) {
     switch (dataType) {
       // case this.measurement.CO2:
       //   return 'fa-lungs'
@@ -392,26 +547,26 @@ Module.register('netatmo', {
         return ''
     }
   },
-  getTrendIcon: function (value) {
+  getTrendIcon (value) {
     if (value === 'stable') return 'fa-chevron-circle-right'
     if (value === 'down') return 'fa-chevron-circle-down'
     if (value === 'up') return 'fa-chevron-circle-up'
     if (value === 'undefined') return 'fa-times-circle'
   },
-  getBatteryIcon: function (value) {
+  getBatteryIcon (value) {
     if (value > 80) return 'fa-battery-full'
     if (value > 60) return 'fa-battery-three-quarters'
     if (value > 40) return 'fa-battery-half'
     if (value > 20) return 'fa-battery-quarter'
     return 'fa-battery-empty flash red'
   },
-  getStyles: function () {
+  getStyles () {
     return [`${this.name}.${this.config.design}.css`]
   },
-  getTemplate: function () {
+  getTemplate () {
     return `${this.name}.${this.config.design}.njk`
   },
-  getTemplateData: function () {
+  getTemplateData () {
     return {
       loaded: this.loaded,
       showLastMessage: this.config.showLastMessage,
@@ -431,7 +586,7 @@ Module.register('netatmo', {
       labelLoading: this.translate('LOADING'),
     }
   },
-  getTranslations: function () {
+  getTranslations () {
     return {
       en: 'l10n/en.json', // fallback language
       cs: 'l10n/cs.json',
@@ -444,29 +599,33 @@ Module.register('netatmo', {
       sv: 'l10n/sv.json',
     }
   },
-  socketNotificationReceived: function (notification, payload) {
-    const self = this
-    Log.debug('received ' + notification)
+  socketNotificationReceived (notification, payload) {
+    Log.debug(`Netatmo: received ${notification}`)
     switch (notification) {
-      case self.notifications.AUTH_RESPONSE:
+      case this.notifications.AUTH_RESPONSE:
         if (payload.status === 'OK') {
-          self.sendSocketNotification(self.notifications.DATA, self.config)
+          console.log('Netatmo: AUTH OK')
+          this.sendSocketNotification(this.notifications.DATA)
         } else {
-          console.log('AUTH FAILED ' + payload.message)
+          console.error(`Netatmo: AUTH FAILED ${payload.message}`)
         }
         break
-      case self.notifications.DATA_RESPONSE:
+      case this.notifications.DATA_RESPONSE:
         if (payload.status === 'OK') {
-          console.log('Devices %o', payload.payloadReturn)
-          const stationList = payload.payloadReturn
-          self.updateModuleList(stationList)
-          self.updateDom(self.config.animationSpeed)
+          console.log('Devices %o', payload.payloadReturn.devices)
+          const stationList = payload.payloadReturn.devices
+          const userPreferences = payload.payloadReturn.user.administrative
+          this.updateUnitOfMeasurements(userPreferences)
+          this.updateModuleList(stationList)
+          this.updateDom(this.config.animationSpeed)
         } else if (payload.status === 'INVALID_TOKEN') {
           // node_module has no valid token, reauthenticate
-          console.log('DATA FAILED, refreshing token')
-          self.sendSocketNotification(self.notifications.AUTH, self.config)
+          console.error('DATA FAILED, refreshing token')
+          // i'm not agree with this... can have error 403 loop
+          // --> managed with node_helper
+          // this.sendSocketNotification(this.notifications.AUTH)
         } else {
-          console.log('DATA FAILED ' + payload.message)
+          console.error(`Netatmo: DATA FAILED ${payload.message}`)
         }
         break
     }

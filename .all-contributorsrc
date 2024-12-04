@@ -85,6 +85,26 @@
       "contributions": [
         "translation"
       ]
+    },
+    {
+      "login": "bugsounet",
+      "name": "Bugsounet - Cédric",
+      "avatar_url": "https://avatars.githubusercontent.com/u/30669209?v=4",
+      "profile": "http://www.bugsounet.fr",
+      "contributions": [
+        "code",
+        "bug",
+        "review"
+      ]
+    },
+    {
+      "login": "Duhlin12",
+      "name": "Duhlin12",
+      "avatar_url": "https://avatars.githubusercontent.com/u/140636121?v=4",
+      "profile": "https://github.com/Duhlin12",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "contributorsPerLine": 7,

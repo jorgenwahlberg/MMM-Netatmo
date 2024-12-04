@@ -1,14 +1,14 @@
 [![Validation](https://github.com/CFenner/MMM-Netatmo/actions/workflows/validation.yml/badge.svg)](https://github.com/CFenner/MMM-Netatmo/actions/workflows/validation.yml)
 [![Known Vulnerabilities](https://snyk.io/test/github/cfenner/magicmirror-netatmo-module/badge.svg)](https://snyk.io/test/github/cfenner/magicmirror-netatmo-module)
 [![code climate](https://codeclimate.com/github/CFenner/MMM-Netatmo/badges/gpa.svg)](https://codeclimate.com/github/CFenner/MMM-Netatmo)
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-neostandard-brightgreen.svg)](https://github.com/neostandard/neostandard)
 [![api](https://img.shields.io/badge/api-Netatmo-orange.svg)](https://dev.netatmo.com/doc)
 [![All Contributors](https://img.shields.io/github/all-contributors/CFenner/MMM-Netatmo/main)](#contributors-)
 [![License](https://img.shields.io/github/license/mashape/apistatus.svg)](https://choosealicense.com/licenses/mit/)
 
 # MMM-Netatmo
 
-A module to integrate information from a [Netatmo weather station][weather-station] into the [MagicMirror][mirror].
+A module for [MagicMirror²][mirror] to integrate information from a [Netatmo weather station][weather-station].
 
 ![Netatmo visualisation](https://github.com/CFenner/MagicMirror-Netatmo-Module/blob/main/.github/preview.classic.png)
 ![Netatmo visualisation](https://github.com/CFenner/MagicMirror-Netatmo-Module/blob/main/.github/preview.bubbles.png)
@@ -29,11 +29,7 @@ cd ~/MagicMirror/modules && git clone https://github.com/CFenner/MMM-Netatmo net
 
 :warning: Note that the checkout folder is named `netatmo` and not `MMM-Netatmo` as the repository.
 
-Navigate into the module folder and install missing dependencies:
-
-```shell
-cd netatmo && npm ci --production --ignore-scripts
-```
+Since v2.1.0: **No special dependencies and no others commands are now needed!**
 
 ### Connection to Netatmo Service API
 
@@ -110,6 +106,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <tr>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/ottolote"><img src="https://avatars.githubusercontent.com/u/6615220?v=4?s=100" width="100px;" alt="Otto Lote"/><br /><sub><b>Otto Lote</b></sub></a><br /><a href="https://github.com/CFenner/MMM-Netatmo/commits?author=ottolote" title="Code">💻</a></td>
       <td align="center" valign="top" width="14.28%"><a href="https://github.com/cgillinger"><img src="https://avatars.githubusercontent.com/u/11836825?v=4?s=100" width="100px;" alt="cgillinger"/><br /><sub><b>cgillinger</b></sub></a><br /><a href="#translation-cgillinger" title="Translation">🌍</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="http://www.bugsounet.fr"><img src="https://avatars.githubusercontent.com/u/30669209?v=4?s=100" width="100px;" alt="Bugsounet - Cédric"/><br /><sub><b>Bugsounet - Cédric</b></sub></a><br /><a href="https://github.com/CFenner/MMM-Netatmo/commits?author=bugsounet" title="Code">💻</a> <a href="https://github.com/CFenner/MMM-Netatmo/issues?q=author%3Abugsounet" title="Bug reports">🐛</a> <a href="https://github.com/CFenner/MMM-Netatmo/pulls?q=is%3Apr+reviewed-by%3Abugsounet" title="Reviewed Pull Requests">👀</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/Duhlin12"><img src="https://avatars.githubusercontent.com/u/140636121?v=4?s=100" width="100px;" alt="Duhlin12"/><br /><sub><b>Duhlin12</b></sub></a><br /><a href="https://github.com/CFenner/MMM-Netatmo/commits?author=Duhlin12" title="Code">💻</a></td>
     </tr>
   </tbody>
 </table>
