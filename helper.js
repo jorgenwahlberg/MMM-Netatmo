@@ -172,7 +172,7 @@ module.exports = {
    * @bugsounet
    */
   readToken () {
-    const file = path.resolve(__dirname, './token.json')
+    const file = path.resolve(__dirname, 'var', 'token.json')
     // check presence of token.json
     if (fs.existsSync(file)) {
       console.log('Netatmo: using token.json file')
@@ -192,7 +192,7 @@ module.exports = {
 
   writeToken (token) {
     try {
-      const file = path.resolve(__dirname, './token.json')
+      const file = path.resolve(__dirname, 'var', 'token.json')
       fs.writeFileSync(file, JSON.stringify(token))
       console.log('Netatmo: token.json was written successfully')
       return token
